@@ -1,0 +1,8 @@
+#!/bin/sh
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+case "$*" in
+  *powerpc-unknown-amigaos*)
+    exec "$ROOT/build/host/stage1/bin/rustc" --sysroot "$ROOT/build/x86_64-unknown-linux-gnu/stage1" "$@" ;;
+  *)
+    exec "$ROOT/build/host/stage0/bin/rustc" "$@" ;;
+esac

@@ -1,0 +1,9 @@
+change-id = "ignore"
+profile = "compiler"
+
+[llvm]
+download-ci-llvm = true
+
+[target.powerpc-unknown-amigaos]
+cc = "ppc-amigaos-gcc"
+linker = "ppc-amigaos-gcc"
