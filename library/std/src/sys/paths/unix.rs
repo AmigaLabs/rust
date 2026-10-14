@@ -292,7 +292,6 @@ pub fn current_exe() -> io::Result<PathBuf> {
     target_os = "hurd",
     target_os = "android",
     target_os = "nuttx",
-    target_os = "amigaos",
     target_os = "emscripten"
 ))]
 pub fn current_exe() -> io::Result<PathBuf> {
@@ -302,6 +301,22 @@ pub fn current_exe() -> io::Result<PathBuf> {
             "no /proc/self/exe available. Is /proc mounted?",
         )),
         other => other,
+    }
+}
+
+#[cfg(target_os = "amigaos")]
+pub fn current_exe() -> io::Result<PathBuf> {
+    // clib4 returns a static buffer that the next call overwrites, so copy it out and do not free it.
+    unsafe {
+        let name = libc::getexecfullname();
+        if name.is_null() {
+            return Err(io::const_error!(
+                io::ErrorKind::NotFound,
+                "no executable name available from clib4",
+            ));
+        }
+        let bytes = CStr::from_ptr(name).to_bytes().to_vec();
+        Ok(PathBuf::from(OsString::from_vec(bytes)))
     }
 }
 

@@ -154,7 +154,7 @@ dependencies = [
 [[package]]
 name = "libc"
 version = "0.2.189"
-source = "git+https://github.com/AmigaLabs/libc?branch=main#2b8b46468bb6678f18efe7929066ee0561b7e02e"
+source = "git+https://github.com/AmigaLabs/libc?branch=main#3e5d14d7f66b3d2d741a43c664ad30c45248a386"
 dependencies = [
  "rustc-std-workspace-core",
 ]
