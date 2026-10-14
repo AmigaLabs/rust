@@ -1,47 +1,47 @@
-# Rust per AmigaOS 4 (`powerpc-unknown-amigaos`)
+# Rust for AmigaOS 4 (`powerpc-unknown-amigaos`)
 
-Fork di manutenzione di Rust con il target `powerpc-unknown-amigaos` (tier 3), compilato con la libc clib4. Il lavoro non è destinato a rust-lang/rust: l'allineamento con l'upstream lo facciamo noi, rebasando il branch `amigaos-port` su `origin/main` dopo il Sync del fork.
+Maintenance fork of Rust with the `powerpc-unknown-amigaos` target (tier 3), built against the clib4 C library. This work is not intended for rust-lang/rust. We keep it aligned with upstream ourselves: after syncing the fork on GitHub, rebase the `amigaos-port` branch onto `origin/main`.
 
-## Stato
+## Status
 
-Verificato sull'Amiga:
-- compilazione e link di programmi statici con std;
-- processi: spawn, argomenti con caratteri speciali, pipe per stdin/stdout/stderr, exit status, kill con SIGTERM;
-- variabili d'ambiente, file system di base, socket locali, clock;
-- crate `libc` tramite patch (vedi Dipendenze).
+Verified on the Amiga (on the previous upstream base; re-verification on the current base is pending):
+- building and linking statically linked programs with std;
+- processes: spawn, arguments with special characters, pipes for stdin/stdout/stderr, exit status, kill with SIGTERM;
+- environment variables, basic file system, local sockets, clock;
+- the `libc` crate through a patch (see Dependencies).
 
-Non supportato o non verificato:
-- SIGKILL: clib4 lo ignora senza errore.
-- DNS (`getaddrinfo`) non testato.
-- Panic e codice di uscita sotto cargo non testati.
-- `current_exe` usa `/proc`, che su AmigaOS non esiste.
-- I nomi dei thread sono ignorati.
-- `env_remove` ed `env_clear` agiscono sull'ambiente solo durante lo spawn, e la modifica è visibile agli altri thread.
-- `Output` legge stdout e poi stderr in sequenza: se stderr si riempie mentre stdout è ancora aperto, può bloccarsi (non riprodotto fino a 2 MB).
-- std non usa `poll` sulle pipe, perché su AmigaOS non è affidabile.
-- L'avviso `dropping unsupported crate type dylib` è atteso: il target è statico e dylib/cdylib non sono supportati.
+Not supported or not verified:
+- SIGKILL: clib4 ignores it silently.
+- DNS (`getaddrinfo`) is not tested.
+- Panics and exit codes under cargo are not tested.
+- `current_exe` uses `/proc`, which does not exist on AmigaOS.
+- Thread names are ignored.
+- `env_remove` and `env_clear` only affect the environment during spawn, and the change is visible to other threads.
+- `Output` reads stdout and then stderr in sequence. If stderr fills up while stdout is still open, it can block (not reproduced up to 2 MB).
+- std does not use `poll` on pipes, because it is unreliable on AmigaOS.
+- The `dropping unsupported crate type dylib` warning is expected: the target is static, and dylib and cdylib are not supported.
 
-## Dipendenze
+## Dependencies
 
-- **clib4**: fork `AmigaLabs/clib4`. Le modifiche per la lettura non bloccante (EAGAIN) e il quoting degli argomenti sono nelle PR #481 e #482.
-- **libc**: fork `AmigaLabs/libc` (branch `main`) della libc 0.2.189 con il modulo AmigaOS. `library/Cargo.toml` lo usa nella patch `[patch.crates-io]`, e `library/Cargo.lock` lo fissa a un commit preciso.
-- **backtrace**: sottomodulo `library/backtrace`, puntato a `AmigaLabs/backtrace-rs` (branch `amigaos-port`). Il commit disabilita il backend libunwind su AmigaOS.
+- **clib4**: fork `AmigaLabs/clib4`. The non-blocking read (EAGAIN) and argument quoting fixes are in PRs #481 and #482.
+- **libc**: fork `AmigaLabs/libc` (branch `main`) of libc 0.2.189 with the AmigaOS module. `library/Cargo.toml` uses it in the `[patch.crates-io]` section, and `library/Cargo.lock` pins it to a specific commit.
+- **backtrace**: submodule `library/backtrace`, pointing to `AmigaLabs/backtrace-rs` (branch `amigaos-port`). Its commit disables the libunwind backend on AmigaOS.
 
-Ogni progetto che usa `libc` su AmigaOS deve avere la stessa patch `[patch.crates-io]` nel proprio `Cargo.toml`, con lo stesso riferimento git.
+Every project that uses `libc` on AmigaOS needs the same `[patch.crates-io]` entry in its own `Cargo.toml`, with the same git reference.
 
-## Prerequisiti
+## Prerequisites
 
-- Linux con le dipendenze di build di Rust (vedi la guida di sviluppo upstream).
-- Docker con accesso al daemon. Se il tuo utente è nel gruppo `docker` ma la sessione corrente non lo ha attivo, usa `sg docker -c "..."` oppure riapri la sessione.
-- Immagine `walkero/amigagccondocker:os4-gcc15-3.5.0-dwarf2`: gcc 15.3.0, binutils e clib4 in `/opt/ppc-amigaos/ppc-amigaos/SDK/clib4`.
+- Linux with the usual Rust build dependencies (see the upstream development guide).
+- Docker with access to the daemon. If your user is in the `docker` group but the current session does not have it active, use `sg docker -c "..."` or start a new session.
+- Image `walkero/amigagccondocker:os4-gcc15-3.5.0-dwarf2`: gcc 15.3.0, binutils, and clib4 under `/opt/ppc-amigaos/ppc-amigaos/SDK/clib4`.
 
-Variabili dei wrapper:
-- `AMIGA_GCC_IMAGE`: immagine da usare (default: quella sopra).
-- `DOCKER_CONTEXT`: contesto Docker (default: `default`).
+Wrapper variables:
+- `AMIGA_GCC_IMAGE`: image to use (default: the one above).
+- `DOCKER_CONTEXT`: Docker context (default: `default`).
 
 ## Build
 
-Dalla radice del repo:
+From the repository root:
 
 ```bash
 cp amiga/bootstrap.toml.example bootstrap.toml
@@ -50,13 +50,13 @@ BOOTSTRAP_SKIP_TARGET_SANITY=1 ./x build compiler/rustc
 BOOTSTRAP_SKIP_TARGET_SANITY=1 ./x build library/std --target powerpc-unknown-amigaos
 ```
 
-`amiga/bin/ppc-amigaos-gcc` esegue gcc nel container, con il repo montato allo stesso percorso dell'host. `amiga/bin/rustc-amiga` sceglie il compilatore stage1 e il sysroot per il target AmigaOS, e lo stage0 per gli script di build dell'host.
+`amiga/bin/ppc-amigaos-gcc` runs gcc inside the container, with the repository mounted at the same path as on the host. `amiga/bin/rustc-amiga` picks the stage1 compiler and sysroot for the AmigaOS target, and the stage0 compiler for host build scripts.
 
-Il `bootstrap.toml` è ignorato da git: parte dal file `amiga/bootstrap.toml.example`.
+`bootstrap.toml` is ignored by git. Start from `amiga/bootstrap.toml.example`.
 
-## Test di un programma
+## Testing a program
 
-Il link passa dal container, quindi sorgenti e output devono stare sotto la radice del repo:
+Linking runs inside the container, so sources and output must live under the repository root:
 
 ```bash
 mkdir -p build/amiga-test
@@ -65,15 +65,15 @@ cd build/amiga-test
 rustc-amiga --target powerpc-unknown-amigaos hello.rs -o hello
 ```
 
-Il binario risultante è ELF 32-bit big-endian statico, da copiare sull'Amiga.
+The result is a statically linked ELF 32-bit big-endian executable. Copy it to the Amiga to run it.
 
-## Sincronizzazione con l'upstream
+## Syncing with upstream
 
-- `origin` è `AmigaLabs/rust`, dove si fa il push.
-- `upstream` è `rust-lang/rust`, con il push disabilitato.
-- Per allinearsi: fare il Sync del fork su GitHub, poi `git fetch origin` e `git rebase origin/main` su `amigaos-port`.
-- Per confrontare con l'upstream: `git fetch upstream main`.
+- `origin` is `AmigaLabs/rust`, where pushes go.
+- `upstream` is `rust-lang/rust`, with push disabled.
+- To align: sync the fork on GitHub, then run `git fetch origin` and `git rebase origin/main` on `amigaos-port`.
+- To compare with upstream: `git fetch upstream main`.
 
-## Nota sulla scrittura
+## Note on authorship
 
-Il codice, i commenti e questo documento sono stati scritti con l'assistenza di un LLM (Claude). Il port è stato verificato dall'autore sull'Amiga. Non è destinato a essere proposto a rust-lang/rust.
+The code, comments, and this document were written with the help of an LLM (Claude). The port was verified by the author on the Amiga. It is not intended to be proposed to rust-lang/rust.
