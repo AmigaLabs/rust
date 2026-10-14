@@ -89,5 +89,5 @@ rustc-std-workspace-std = { path = 'rustc-std-workspace-std' }
 # See comments in `library/windows-sys/Cargo.toml` for why this is patched
 windows-sys = { path = 'windows-sys' }
 
-# Local fork of libc with AmigaOS (clib4) support
-libc = { path = '/home/apalmate/Develop/libc-amigaos' }
+# Fork of libc with AmigaOS (clib4) support
+libc = { git = 'https://github.com/AmigaLabs/libc', branch = 'main' }
