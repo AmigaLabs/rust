@@ -24,10 +24,10 @@ Non supportato o non verificato:
 ## Dipendenze
 
 - **clib4**: fork `AmigaLabs/clib4`. Le modifiche per la lettura non bloccante (EAGAIN) e il quoting degli argomenti sono nelle PR #481 e #482.
-- **libc**: fork della libc 0.2.189 con il modulo AmigaOS. Il branch locale ha la storia `Import libc 0.2.189` + `Add AmigaOS (clib4) module`. Va pubblicato come `AmigaLabs/libc`. Finché non è pubblicato, `library/Cargo.toml` usa un percorso assoluto nella patch `[patch.crates-io]`, che va sostituito con il riferimento git.
-- **backtrace**: il sottomodulo `library/backtrace` richiede un commit locale che disabilita il backend libunwind su AmigaOS. Va pubblicato come `AmigaLabs/backtrace-rs` e il sottomodulo va puntato lì.
+- **libc**: fork `AmigaLabs/libc` (branch `main`) della libc 0.2.189 con il modulo AmigaOS. `library/Cargo.toml` lo usa nella patch `[patch.crates-io]`, e `library/Cargo.lock` lo fissa a un commit preciso.
+- **backtrace**: sottomodulo `library/backtrace`, puntato a `AmigaLabs/backtrace-rs` (branch `amigaos-port`). Il commit disabilita il backend libunwind su AmigaOS.
 
-Ogni progetto che usa `libc` su AmigaOS deve avere la stessa patch `[patch.crates-io]` nel proprio `Cargo.toml`.
+Ogni progetto che usa `libc` su AmigaOS deve avere la stessa patch `[patch.crates-io]` nel proprio `Cargo.toml`, con lo stesso riferimento git.
 
 ## Prerequisiti
 
