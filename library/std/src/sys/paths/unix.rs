@@ -292,6 +292,7 @@ pub fn current_exe() -> io::Result<PathBuf> {
     target_os = "hurd",
     target_os = "android",
     target_os = "nuttx",
+    target_os = "amigaos",
     target_os = "emscripten"
 ))]
 pub fn current_exe() -> io::Result<PathBuf> {

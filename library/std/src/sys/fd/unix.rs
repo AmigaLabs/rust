@@ -581,6 +581,7 @@ impl FileDesc {
         target_os = "nto",
         target_os = "qnx",
         target_os = "wasi",
+        target_os = "amigaos",
     )))]
     pub fn set_cloexec(&self) -> io::Result<()> {
         unsafe {
@@ -617,7 +618,7 @@ impl FileDesc {
             Ok(())
         }
     }
-    #[cfg(any(target_os = "espidf", target_os = "horizon", target_os = "vita"))]
+    #[cfg(any(target_os = "espidf", target_os = "horizon", target_os = "vita", target_os = "amigaos"))]
     pub fn set_cloexec(&self) -> io::Result<()> {
         // FD_CLOEXEC is not supported in ESP-IDF, Horizon OS and Vita but there's no need to,
         // because none of them supports spawning processes.

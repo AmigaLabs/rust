@@ -1,0 +1,4 @@
+#!/bin/sh
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+IMAGE="${AMIGA_GCC_IMAGE:-walkero/amigagccondocker:os4-gcc15-3.5.0-dwarf2}"
+exec docker --context "${DOCKER_CONTEXT:-default}" run --rm -v "$ROOT:$ROOT" -w "$PWD" "$IMAGE" /opt/ppc-amigaos/bin/ppc-amigaos-gcc "$@"

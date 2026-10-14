@@ -592,7 +592,11 @@ impl FileAttr {
             }
         }
 
-        SystemTime::new(self.stat.st_mtime as i64, self.stat.st_mtime_nsec as i64)
+        #[cfg(not(target_os = "amigaos"))]
+        let nsec = self.stat.st_mtime_nsec as i64;
+        #[cfg(target_os = "amigaos")]
+        let nsec = 0;
+        SystemTime::new(self.stat.st_mtime as i64, nsec)
     }
 
     #[cfg(any(
@@ -632,7 +636,11 @@ impl FileAttr {
             }
         }
 
-        SystemTime::new(self.stat.st_atime as i64, self.stat.st_atime_nsec as i64)
+        #[cfg(not(target_os = "amigaos"))]
+        let nsec = self.stat.st_atime_nsec as i64;
+        #[cfg(target_os = "amigaos")]
+        let nsec = 0;
+        SystemTime::new(self.stat.st_atime as i64, nsec)
     }
 
     #[cfg(any(

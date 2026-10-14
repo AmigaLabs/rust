@@ -424,6 +424,9 @@ fn truncate_cstr<const MAX_WITH_NUL: usize>(cstr: &CStr) -> [libc::c_char; MAX_W
     result
 }
 
+#[cfg(target_os = "amigaos")]
+pub fn set_name(_name: &CStr) {}
+
 #[cfg(target_os = "android")]
 pub fn set_name(name: &CStr) {
     const PR_SET_NAME: libc::c_int = 15;

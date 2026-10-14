@@ -748,7 +748,7 @@ pub use core::cfg_select;
 )]
 pub use core::concat_bytes;
 #[allow(clippy::useless_attribute)]
-#[expect(
+#[allow(
     ineffective_unstable_reexports,
     reason = "accepted as stable after accidental stabilization in 1.96, see #154645"
 )]

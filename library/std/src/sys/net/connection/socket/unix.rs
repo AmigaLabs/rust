@@ -220,7 +220,7 @@ impl Socket {
                 }
                 0 => {}
                 _ => {
-                    if cfg!(target_os = "vxworks") {
+                    if cfg!(any(target_os = "vxworks", target_os = "amigaos")) {
                         // VxWorks poll does not return  POLLHUP or POLLERR in revents. Check if the
                         // connection actually succeeded and return ok only when the socket is
                         // ready and no errors were found.
