@@ -53,8 +53,18 @@ pub unsafe fn environ() -> *mut *const *const c_char {
     unsafe { environ }
 }
 
+// clib4 has no `environ` symbol: its header defines `environ` as `(*__environ())`,
+// so `__environ()` returns the address of the variable.
+#[cfg(target_os = "amigaos")]
+pub unsafe fn environ() -> *mut *const *const c_char {
+    unsafe extern "C" {
+        fn __environ() -> *mut *const *const c_char;
+    }
+    unsafe { __environ() }
+}
+
 // Use the `environ` static which is part of POSIX.
-#[cfg(not(any(target_os = "freebsd", target_vendor = "apple")))]
+#[cfg(not(any(target_os = "freebsd", target_os = "amigaos", target_vendor = "apple")))]
 pub unsafe fn environ() -> *mut *const *const c_char {
     unsafe extern "C" {
         static mut environ: *const *const c_char;

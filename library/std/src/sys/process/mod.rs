@@ -46,7 +46,8 @@ pub use imp::{
             target_os = "horizon",
             target_os = "vita",
             target_os = "nuttx",
-            target_os = "l4re"
+            target_os = "l4re",
+            target_os = "amigaos"
         ))
     ),
     target_os = "windows"
@@ -84,7 +85,8 @@ pub fn output(cmd: &mut Command) -> crate::io::Result<(ExitStatus, Vec<u8>, Vec<
             target_os = "horizon",
             target_os = "vita",
             target_os = "nuttx",
-            target_os = "l4re"
+            target_os = "l4re",
+            target_os = "amigaos"
         ))
     ),
     target_os = "windows"

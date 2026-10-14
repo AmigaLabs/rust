@@ -29,6 +29,7 @@ unsafe extern "C" {
             target_os = "android",
             target_os = "redox",
             target_os = "nuttx",
+            target_os = "amigaos",
             target_env = "newlib"
         ),
         link_name = "__errno"

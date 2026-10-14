@@ -23,6 +23,7 @@ cfg_select! {
         target_os = "rtems",
         target_os = "solaris",
         target_os = "vita",
+        target_os = "amigaos",
         target_os = "nuttx",
     ) => {
         mod arc4random;

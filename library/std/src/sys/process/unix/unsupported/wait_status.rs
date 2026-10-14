@@ -28,7 +28,11 @@ impl From<c_int> for ExitStatus {
 
 impl fmt::Display for ExitStatus {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "emulated wait status: {}", self.wait_status)
+        if cfg!(target_os = "amigaos") {
+            write!(f, "exit status: {}", self.wait_status)
+        } else {
+            write!(f, "emulated wait status: {}", self.wait_status)
+        }
     }
 }
 

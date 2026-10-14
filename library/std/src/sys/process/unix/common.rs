@@ -31,6 +31,9 @@ cfg_select! {
     target_os = "vxworks" => {
         const DEV_NULL: &CStr = c"/null";
     }
+    target_os = "amigaos" => {
+        const DEV_NULL: &CStr = c"NIL:";
+    }
     _ => {
         const DEV_NULL: &CStr = c"/dev/null";
     }
@@ -643,6 +646,19 @@ pub fn read_output(
     err: ChildPipe,
     stderr: &mut Vec<u8>,
 ) -> io::Result<()> {
+    if cfg!(target_os = "amigaos") {
+        // clib4 poll() does not report pipe descriptors as readable, so on amigaos
+        // stderr is read on a helper thread in blocking mode while stdout is read here.
+        let handle = crate::thread::spawn(move || {
+            let mut buf = Vec::new();
+            err.read_to_end(&mut buf).map(|_| buf)
+        });
+        out.read_to_end(stdout)?;
+        let buf = handle.join().unwrap()?;
+        stderr.extend_from_slice(&buf);
+        return Ok(());
+    }
+
     // Set both pipes into nonblocking mode as we're gonna be reading from both
     // in the `select` loop below, and we wouldn't want one to block the other!
     out.set_nonblocking(true)?;

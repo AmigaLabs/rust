@@ -125,6 +125,8 @@ pub mod netbsd;
 pub mod nto;
 #[cfg(target_os = "nuttx")]
 pub mod nuttx;
+#[cfg(target_os = "amigaos")]
+pub mod amigaos;
 #[cfg(target_os = "openbsd")]
 pub mod openbsd;
 #[cfg(target_os = "redox")]

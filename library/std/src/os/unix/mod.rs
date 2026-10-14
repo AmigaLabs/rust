@@ -74,6 +74,8 @@ mod platform {
     pub use crate::os::nto::*;
     #[cfg(target_os = "nuttx")]
     pub use crate::os::nuttx::*;
+    #[cfg(target_os = "amigaos")]
+    pub use crate::os::amigaos::*;
     #[cfg(target_os = "openbsd")]
     pub use crate::os::openbsd::*;
     #[cfg(target_os = "redox")]

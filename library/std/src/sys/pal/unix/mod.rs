@@ -83,6 +83,7 @@ pub unsafe fn init(argc: isize, argv: *const *const u8, sigpipe: u8) {
             target_os = "horizon",
             target_os = "vita",
             target_os = "rtems",
+            target_os = "amigaos",
             // The poll on Darwin doesn't set POLLNVAL for closed fds when `events == 0`.
             target_vendor = "apple",
         )))]
@@ -205,6 +206,7 @@ static ON_BROKEN_PIPE_USED: crate::sync::atomic::Atomic<bool> =
     target_os = "vxworks",
     target_os = "vita",
     target_os = "nuttx",
+    target_os = "amigaos",
 )))]
 pub(crate) fn on_broken_pipe_used() -> bool {
     ON_BROKEN_PIPE_USED.load(crate::sync::atomic::Ordering::Relaxed)

@@ -1,5 +1,11 @@
 #[cfg_attr(
-    any(target_os = "espidf", target_os = "horizon", target_os = "nuttx", target_os = "l4re"),
+    any(
+        target_os = "espidf",
+        target_os = "horizon",
+        target_os = "nuttx",
+        target_os = "l4re",
+        target_os = "amigaos"
+    ),
     allow(unused)
 )]
 mod common;
@@ -23,6 +29,11 @@ cfg_select! {
         mod unsupported;
         use unsupported as imp;
         pub use unsupported::output;
+    }
+    target_os = "amigaos" => {
+        mod amigaos;
+        use amigaos as imp;
+        pub use amigaos::output;
     }
     _ => {
         mod unix;

@@ -1,4 +1,5 @@
 pub(crate) mod aix;
+pub(crate) mod amigaos;
 pub(crate) mod android;
 pub mod apple;
 pub(crate) mod arm_none;
