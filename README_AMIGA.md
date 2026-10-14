@@ -4,17 +4,18 @@ Maintenance fork of Rust with the `powerpc-unknown-amigaos` target (tier 3), bui
 
 ## Status
 
-Verified on the Amiga (on the previous upstream base; re-verification on the current base is pending):
+Verified on the Amiga (process, file, and network tests on the previous upstream base; re-verification on the current base is pending, except DNS and `current_exe()`, which were tested on the current base):
 - building and linking statically linked programs with std;
 - processes: spawn, arguments with special characters, pipes for stdin/stdout/stderr, exit status, kill with SIGTERM;
 - environment variables, basic file system, local sockets, clock;
+- DNS: `getaddrinfo` resolves `localhost`, IP literals, and public names, and reports unknown names as errors;
+- `env::current_exe()` returns the full path of the program (`Work:dir/prog`) when started from the shell with a bare name, a relative path, or an absolute path, from any current directory;
 - the `libc` crate through a patch (see Dependencies).
 
 Not supported or not verified:
 - SIGKILL: clib4 ignores it silently.
-- DNS (`getaddrinfo`) is not tested.
 - Panics and exit codes under cargo are not tested.
-- `current_exe` uses `/proc`, which does not exist on AmigaOS.
+- `current_exe()` for a program found through the `C:` search path, and for Workbench-started programs, is not tested.
 - Thread names are ignored.
 - `env_remove` and `env_clear` only affect the environment during spawn, and the change is visible to other threads.
 - `Output` reads stdout and then stderr in sequence. If stderr fills up while stdout is still open, it can block (not reproduced up to 2 MB).
@@ -23,7 +24,7 @@ Not supported or not verified:
 
 ## Dependencies
 
-- **clib4**: fork `AmigaLabs/clib4`. The non-blocking read (EAGAIN) and argument quoting fixes are in PRs #481 and #482.
+- **clib4**: fork `AmigaLabs/clib4`. The non-blocking read (EAGAIN) and argument quoting fixes are in PRs #481 and #482. `current_exe()` also needs `getexecfullname()`, which is not in `AmigaLabs/clib4` yet: it must be built into both `clib4.library` on the Amiga and the SDK used for linking.
 - **libc**: fork `AmigaLabs/libc` (branch `main`) of libc 0.2.189 with the AmigaOS module. `library/Cargo.toml` uses it in the `[patch.crates-io]` section, and `library/Cargo.lock` pins it to a specific commit.
 - **backtrace**: submodule `library/backtrace`, pointing to `AmigaLabs/backtrace-rs` (branch `amigaos-port`). Its commit disables the libunwind backend on AmigaOS.
 
@@ -33,7 +34,7 @@ Every project that uses `libc` on AmigaOS needs the same `[patch.crates-io]` ent
 
 - Linux with the usual Rust build dependencies (see the upstream development guide).
 - Docker with access to the daemon. If your user is in the `docker` group but the current session does not have it active, use `sg docker -c "..."` or start a new session.
-- Image `walkero/amigagccondocker:os4-gcc15-3.5.0-dwarf2`: gcc 15.3.0, binutils, and clib4 under `/opt/ppc-amigaos/ppc-amigaos/SDK/clib4`.
+- Image `walkero/amigagccondocker:os4-gcc15-3.5.0-dwarf2`: gcc 15.3.0, binutils, and clib4 under `/opt/ppc-amigaos/ppc-amigaos/SDK/clib4`. This image does not yet export `getexecfullname`, so programs that link `current_exe()` fail to link with it. Use an image or SDK whose `libc.a` provides the symbol, and point `AMIGA_GCC_IMAGE` at it.
 
 Wrapper variables:
 - `AMIGA_GCC_IMAGE`: image to use (default: the one above).
