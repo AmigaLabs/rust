@@ -12,6 +12,7 @@ Verified on the Amiga (process, file, and network tests on the previous upstream
 - `env::current_exe()` returns the full path of the program (`Work:dir/prog`) when started from the shell with a bare name, a relative path, or an absolute path, from any current directory;
 - the `libc` crate through a patch (see Dependencies);
 - `cargo test`: test binaries built for the target run on the Amiga, covering unit tests, file I/O, threads, and a child process spawned from a test thread with its output read through a pipe.
+- Stack: every executable carries a 1 MB `$STACK:` cookie, added by std (`library/std/src/rt.rs`). AmigaOS uses a much smaller default stack, and ordinary Rust code such as `clap` overflowed it.
 
 Not supported or not verified:
 - SIGKILL: clib4 ignores it silently.

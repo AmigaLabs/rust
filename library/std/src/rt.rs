@@ -20,6 +20,12 @@
 pub use crate::panicking::{begin_panic, panic_count};
 pub use core::panicking::{panic_display, panic_fmt};
 
+// AmigaOS sizes a program's stack from a "$STACK:" cookie stored in the
+// executable. Without it the default stack is too small for ordinary Rust code.
+#[cfg(all(target_os = "amigaos", not(test)))]
+#[used]
+static AMIGAOS_STACK_COOKIE: [u8; 16] = *b"$STACK: 1000000\0";
+
 #[rustfmt::skip]
 use crate::any::Any;
 use crate::sync::Once;
