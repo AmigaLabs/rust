@@ -15,7 +15,15 @@ const NUL_ERR: io::Error =
 
 #[inline]
 pub fn run_path_with_cstr<T>(path: &Path, f: &dyn Fn(&CStr) -> io::Result<T>) -> io::Result<T> {
-    run_with_cstr(path.as_os_str().as_encoded_bytes(), f)
+    #[cfg(not(target_os = "amigaos"))]
+    return run_with_cstr(path.as_os_str().as_encoded_bytes(), f);
+
+    #[cfg(target_os = "amigaos")]
+    {
+        let converted =
+            crate::sys::helpers::amigaos_path::to_amiga_bytes(path.as_os_str().as_encoded_bytes());
+        run_with_cstr(&converted, f)
+    }
 }
 
 #[inline]

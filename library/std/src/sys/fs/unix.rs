@@ -2121,11 +2121,14 @@ pub fn canonicalize(path: &CStr) -> io::Result<PathBuf> {
     if r.is_null() {
         return Err(io::Error::last_os_error());
     }
-    Ok(PathBuf::from(OsString::from_vec(unsafe {
+    let buf = unsafe {
         let buf = CStr::from_ptr(r).to_bytes().to_vec();
         libc::free(r as *mut _);
         buf
-    })))
+    };
+    #[cfg(target_os = "amigaos")]
+    let buf = crate::sys::helpers::amigaos_path::to_amiga_bytes(&buf).into_owned();
+    Ok(PathBuf::from(OsString::from_vec(buf)))
 }
 
 fn link_then_unlink(old: &CStr, new: &CStr) -> io::Result<()> {

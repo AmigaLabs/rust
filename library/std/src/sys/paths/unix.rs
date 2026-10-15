@@ -18,7 +18,14 @@ pub fn getcwd() -> io::Result<PathBuf> {
     Ok(PathBuf::from("/"))
 }
 
-#[cfg(not(target_os = "espidf"))]
+#[cfg(target_os = "amigaos")]
+pub fn getcwd() -> io::Result<PathBuf> {
+    let cwd = crate::sys::helpers::amigaos_path::raw_cwd()?;
+    let native = crate::sys::helpers::amigaos_path::to_amiga_bytes(&cwd).into_owned();
+    Ok(PathBuf::from(OsString::from_vec(native)))
+}
+
+#[cfg(not(any(target_os = "espidf", target_os = "amigaos")))]
 pub fn getcwd() -> io::Result<PathBuf> {
     let mut buf = Vec::with_capacity(512);
     loop {

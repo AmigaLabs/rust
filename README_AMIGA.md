@@ -13,6 +13,9 @@ Verified on the Amiga (process, file, and network tests on the previous upstream
 - the `libc` crate through a patch (see Dependencies);
 - `cargo test`: test binaries built for the target run on the Amiga, covering unit tests, file I/O, threads, and a child process spawned from a test thread with its output read through a pipe.
 - Stack: every executable carries a 1 MB `$STACK:` cookie, added by std (`library/std/src/rt.rs`). AmigaOS uses a much smaller default stack, and ordinary Rust code such as `clap` overflowed it.
+- Paths: std rewrites paths for clib4 (`library/std/src/sys/helpers/amigaos_path.rs`): `.`, `..`, and unix absolute paths such as `/Work/dir` become AmigaDOS names, and `current_dir()` returns `Work:dir`. The result is the same with and without unix path semantics.
+- File types: directory entries report their type correctly. clib4's `d_type` values are used on AmigaOS (`DT_REG = 1`), not Linux's.
+- `tokei` 15 counts files and lines in a directory tree, with and without unix path semantics.
 
 Not supported or not verified:
 - SIGKILL: clib4 ignores it silently.

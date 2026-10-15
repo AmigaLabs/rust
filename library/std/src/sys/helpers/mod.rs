@@ -3,6 +3,8 @@
 //! If any of these have uses outside of `sys`, please move them to a different
 //! module.
 
+#[cfg(target_os = "amigaos")]
+pub mod amigaos_path;
 #[cfg_attr(not(target_os = "netbsd"), allow(unused))] // Not used on all platforms.
 mod c_opaque;
 #[cfg_attr(not(target_os = "linux"), allow(unused))] // Not used on all platforms.
