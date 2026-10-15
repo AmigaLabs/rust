@@ -37,7 +37,7 @@ Every project that uses `libc` on AmigaOS needs the same `[patch.crates-io]` ent
 
 - Linux with the usual Rust build dependencies (see the upstream development guide).
 - Docker with access to the daemon. If your user is in the `docker` group but the current session does not have it active, use `sg docker -c "..."` or start a new session.
-- Image `walkero/amigagccondocker:os4-gcc15-3.5.0-dwarf2`: gcc 15.3.0, binutils, and clib4 under `/opt/ppc-amigaos/ppc-amigaos/SDK/clib4`. This image does not yet export `getexecfullname`, so programs that link `current_exe()` fail to link with it. Use an image or SDK whose `libc.a` provides the symbol, and point `AMIGA_GCC_IMAGE` at it.
+- Image `walkero/amigagccondocker:os4-gcc15-3.5.0-dwarf2`: gcc 15.3.0, binutils, and clib4 under `/opt/ppc-amigaos/ppc-amigaos/SDK/clib4`. This image does not export `getexecfullname`, so programs that call `current_exe()` fail to link with it (other programs link fine). Build the local SDK image once with `amiga/make-sdk-image.sh`, which produces `amigagcc-local:clib4-fullname`, and set `AMIGA_GCC_IMAGE` to that image.
 
 Wrapper variables:
 - `AMIGA_GCC_IMAGE`: image to use (default: the one above).
