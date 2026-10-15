@@ -23,7 +23,7 @@ docker --context "$CTX" run --name "$NAME" -v "$ROOT/amiga/sdk:/stub:ro" "$BASE"
         $BIN/ppc-amigaos-gcc -mcrt=clib4 -O2 -c "$src" -o /tmp/$(basename "$src" .c).o
     done
     $BIN/ppc-amigaos-ar r "$LIBC" /tmp/*.o
-    for sym in getexecfullname preadv pwritev dup3; do
+    for sym in getexecfullname preadv pwritev dup3 madvise; do
         $BIN/ppc-amigaos-nm "$LIBC" | grep -q " T $sym$"
     done
 '
