@@ -1,8 +1,5 @@
 #!/bin/sh
+# Host and target builds both use the stage1 compiler: a proc-macro built by
+# stage0 cannot be loaded by stage1 (E0514), so both must come from stage1.
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-case "$*" in
-  *powerpc-unknown-amigaos*)
-    exec "$ROOT/build/host/stage1/bin/rustc" --sysroot "$ROOT/build/x86_64-unknown-linux-gnu/stage1" "$@" ;;
-  *)
-    exec "$ROOT/build/host/stage0/bin/rustc" "$@" ;;
-esac
+exec "$ROOT/build/host/stage1/bin/rustc" --sysroot "$ROOT/build/x86_64-unknown-linux-gnu/stage1" "$@"

@@ -51,16 +51,12 @@ From the repository root:
 cp amiga/bootstrap.toml.example bootstrap.toml
 export PATH="$PWD/amiga/bin:$PATH"
 BOOTSTRAP_SKIP_TARGET_SANITY=1 ./x build compiler/rustc
-BOOTSTRAP_SKIP_TARGET_SANITY=1 ./x build library/std --target powerpc-unknown-amigaos
+BOOTSTRAP_SKIP_TARGET_SANITY=1 ./x build library/std library/proc_macro library/test --target x86_64-unknown-linux-gnu,powerpc-unknown-amigaos
 ```
 
-For `cargo test`, also build the test crate (libtest) for the target:
+Build all the sysroot targets in one `./x build` invocation. Each invocation rebuilds the stage1 sysroot only for the targets it names, so a separate build for the host would remove the AmigaOS libraries.
 
-```bash
-BOOTSTRAP_SKIP_TARGET_SANITY=1 ./x build library/test --target powerpc-unknown-amigaos
-```
-
-`amiga/bin/ppc-amigaos-gcc` runs gcc inside the container, with the repository mounted at the same path as on the host. `amiga/bin/rustc-amiga` picks the stage1 compiler and sysroot for the AmigaOS target, and the stage0 compiler for host build scripts.
+`amiga/bin/ppc-amigaos-gcc` runs gcc inside the container, with the repository mounted at the same path as on the host. `amiga/bin/rustc-amiga` always runs the stage1 compiler with its sysroot, for host and target builds alike: a proc-macro built by stage0 cannot be loaded by stage1 (E0514), so cargo must not mix them.
 
 `bootstrap.toml` is ignored by git. Start from `amiga/bootstrap.toml.example`.
 
