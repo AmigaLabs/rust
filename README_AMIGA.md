@@ -10,11 +10,12 @@ Verified on the Amiga (process, file, and network tests on the previous upstream
 - environment variables, basic file system, local sockets, clock;
 - DNS: `getaddrinfo` resolves `localhost`, IP literals, and public names, and reports unknown names as errors;
 - `env::current_exe()` returns the full path of the program (`Work:dir/prog`) when started from the shell with a bare name, a relative path, or an absolute path, from any current directory;
-- the `libc` crate through a patch (see Dependencies).
+- the `libc` crate through a patch (see Dependencies);
+- `cargo test`: test binaries built for the target run on the Amiga, covering unit tests, file I/O, threads, and a child process spawned from a test thread with its output read through a pipe.
 
 Not supported or not verified:
 - SIGKILL: clib4 ignores it silently.
-- Panics and exit codes under cargo are not tested.
+- Panics abort the program (`panic=abort`), so a failing cargo test aborts the whole test binary instead of being reported. `#[should_panic]` tests are not supported.
 - `current_exe()` for a program found through the `C:` search path, and for Workbench-started programs, is not tested.
 - Thread names are ignored.
 - `env_remove` and `env_clear` only affect the environment during spawn, and the change is visible to other threads.
@@ -24,7 +25,9 @@ Not supported or not verified:
 
 ## Dependencies
 
-- **clib4**: fork `AmigaLabs/clib4`. The non-blocking read (EAGAIN) and argument quoting fixes are in PRs #481 and #482. `current_exe()` also needs `getexecfullname()`, which is not in `AmigaLabs/clib4` yet: it must be built into both `clib4.library` on the Amiga and the SDK used for linking.
+- **clib4**: fork `AmigaLabs/clib4`. The non-blocking read (EAGAIN) and argument quoting fixes are in PRs #481 and #482. Two changes are not in `AmigaLabs/clib4` yet:
+  - `getexecfullname()`, needed by `current_exe()`. It must be built into both `clib4.library` on the Amiga and the SDK used for linking.
+  - The fix in `library/misc/children.c` (`spawnedProcessExit`). Without it, the exit status of a child spawned from a thread reads as "still running" (`0x10000000`), which breaks `cargo test` as soon as a test spawns a process. Only `clib4.library` needs replacing for this one.
 - **libc**: fork `AmigaLabs/libc` (branch `main`) of libc 0.2.189 with the AmigaOS module. `library/Cargo.toml` uses it in the `[patch.crates-io]` section, and `library/Cargo.lock` pins it to a specific commit.
 - **backtrace**: submodule `library/backtrace`, pointing to `AmigaLabs/backtrace-rs` (branch `amigaos-port`). Its commit disables the libunwind backend on AmigaOS.
 
@@ -49,6 +52,12 @@ cp amiga/bootstrap.toml.example bootstrap.toml
 export PATH="$PWD/amiga/bin:$PATH"
 BOOTSTRAP_SKIP_TARGET_SANITY=1 ./x build compiler/rustc
 BOOTSTRAP_SKIP_TARGET_SANITY=1 ./x build library/std --target powerpc-unknown-amigaos
+```
+
+For `cargo test`, also build the test crate (libtest) for the target:
+
+```bash
+BOOTSTRAP_SKIP_TARGET_SANITY=1 ./x build library/test --target powerpc-unknown-amigaos
 ```
 
 `amiga/bin/ppc-amigaos-gcc` runs gcc inside the container, with the repository mounted at the same path as on the host. `amiga/bin/rustc-amiga` picks the stage1 compiler and sysroot for the AmigaOS target, and the stage0 compiler for host build scripts.
