@@ -25,9 +25,12 @@ Not supported or not verified:
 
 ## Dependencies
 
-- **clib4**: fork `AmigaLabs/clib4`. The non-blocking read (EAGAIN) and argument quoting fixes are in PRs #481 and #482. Two changes are not in `AmigaLabs/clib4` yet:
+- **clib4**: fork `AmigaLabs/clib4`. The non-blocking read (EAGAIN) and argument quoting fixes are in PRs #481 and #482. Three local commits are not yet in `AmigaLabs/clib4`. Push them before building against it:
   - `getexecfullname()`, needed by `current_exe()`. It must be built into both `clib4.library` on the Amiga and the SDK used for linking.
   - The fix in `library/misc/children.c` (`spawnedProcessExit`). Without it, the exit status of a child spawned from a thread reads as "still running" (`0x10000000`), which breaks `cargo test` as soon as a test spawns a process. Only `clib4.library` needs replacing for this one.
+  - `preadv()`, `pwritev()`, `dup3()`, and placeholder definitions for Linux names clib4 does not implement (termios flags and control characters, errno values from 200, and some baud rates). Commit `54e84c71`. The placeholders compile but do nothing; see the comments in the headers.
+
+Until the SDK ships these symbols, `amiga/make-sdk-image.sh` adds the assembly stub and C shims in `amiga/sdk`. Remove those shims once the SDK is rebuilt from clib4 that includes this commit, or the link fails with duplicate symbols.
 - **libc**: fork `AmigaLabs/libc` (branch `main`) of libc 0.2.189 with the AmigaOS module. `library/Cargo.toml` uses it in the `[patch.crates-io]` section, and `library/Cargo.lock` pins it to a specific commit.
 - **backtrace**: submodule `library/backtrace`, pointing to `AmigaLabs/backtrace-rs` (branch `amigaos-port`). Its commit disables the libunwind backend on AmigaOS.
 
