@@ -149,6 +149,14 @@ impl Thread {
 impl Drop for Thread {
     fn drop(&mut self) {
         let ret = unsafe { libc::pthread_detach(self.id) };
+        // AmigaOS (clib4) answers ESRCH for a thread that has already finished. That is the usual
+        // case when a handle is dropped right after the spawn, and there is nothing left to detach.
+        #[cfg(target_os = "amigaos")]
+        {
+            if ret == libc::ESRCH {
+                return;
+            }
+        }
         debug_assert_eq!(ret, 0);
     }
 }
