@@ -560,7 +560,45 @@ pub fn set_name(name: &CStr) {
     debug_assert_eq!(res, libc::OK);
 }
 
-#[cfg(not(target_os = "espidf"))]
+// AmigaOS (clib4): `nanosleep` interrupted by a signal does not report the time left, and it
+// sets the interrupting signal again before returning. The generic retry loop below then spins
+// for good: at exit clib4 cancels the threads still alive, and a thread inside `sleep` (whose
+// cancel signal can share its number with clib4's alarm signal) never left it, so the process
+// never ended. Here a pending cancellation is acted on, and only what is left until the deadline
+// is slept, so an interrupted sleep ends on time at worst.
+#[cfg(target_os = "amigaos")]
+pub fn sleep(dur: Duration) {
+    use crate::time::Instant;
+    unsafe extern "C" {
+        fn pthread_testcancel();
+    }
+    let deadline = Instant::now().checked_add(dur);
+    loop {
+        let left = match deadline {
+            Some(d) => {
+                let now = Instant::now();
+                if now >= d {
+                    return;
+                }
+                d - now
+            }
+            None => Duration::from_secs(86_400),
+        };
+        let ts = libc::timespec {
+            tv_sec: cmp::min(libc::time_t::MAX as u64, left.as_secs()) as libc::time_t,
+            tv_nsec: left.subsec_nanos() as _,
+        };
+        let r = unsafe { libc::nanosleep(&ts, crate::ptr::null_mut()) };
+        // Exits the thread when it has been cancelled (clib4 does so for every live thread at
+        // exit); otherwise returns.
+        unsafe { pthread_testcancel() };
+        if r != 0 && sys::io::errno() != libc::EINTR {
+            return;
+        }
+    }
+}
+
+#[cfg(not(any(target_os = "espidf", target_os = "amigaos")))]
 pub fn sleep(dur: Duration) {
     cfg_select! {
         // Any unix that has clock_nanosleep

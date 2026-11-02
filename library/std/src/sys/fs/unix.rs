@@ -960,6 +960,14 @@ impl Iterator for ReadDir {
                     d_type: (*entry_ptr).d_type as u8,
                 };
 
+                // AmigaOS names are in the system charset; paths in Rust are UTF-8.
+                #[cfg(target_os = "amigaos")]
+                let name = &match crate::ffi::CString::new(
+                    crate::sys::helpers::amigaos_path::from_native(name_bytes).into_owned(),
+                ) {
+                    Ok(name) => name,
+                    Err(_) => name.to_owned(),
+                };
                 return Some(Ok(DirEntry {
                     entry,
                     name: name.to_owned(),
@@ -1871,8 +1879,56 @@ pub fn unlink(p: &CStr) -> io::Result<()> {
     cvt(unsafe { libc::unlink(p.as_ptr()) }).map(|_| ())
 }
 
+#[cfg(not(target_os = "amigaos"))]
 pub fn rename(old: &CStr, new: &CStr) -> io::Result<()> {
     cvt(unsafe { libc::rename(old.as_ptr(), new.as_ptr()) }).map(|_| ())
+}
+
+/// AmigaDOS `Rename()` never replaces an existing file, so clib4's `rename()` fails with EEXIST
+/// where POSIX, and `std::fs::rename`, replace the destination: every save that writes a
+/// temporary file and renames it over the document failed. A file in the way is renamed aside,
+/// the rename is done and the file aside deleted; if the rename fails, the file is put back.
+#[cfg(target_os = "amigaos")]
+pub fn rename(old: &CStr, new: &CStr) -> io::Result<()> {
+    let refused = match cvt(unsafe { libc::rename(old.as_ptr(), new.as_ptr()) }) {
+        Ok(_) => return Ok(()),
+        Err(e) => e,
+    };
+    if refused.raw_os_error() != Some(libc::EEXIST) || old == new {
+        return if old == new { Ok(()) } else { Err(refused) };
+    }
+    // Only a file replaces a file: a folder on either side keeps the error.
+    match (lstat(old), lstat(new)) {
+        (Ok(from), Ok(to)) if !from.file_type().is_dir() && !to.file_type().is_dir() => {}
+        _ => return Err(refused),
+    }
+    let mut set_aside = None;
+    for n in 0..16u32 {
+        let mut name = new.to_bytes().to_vec();
+        name.extend_from_slice(b".replaced-");
+        name.push(b'a' + n as u8);
+        let Ok(name) = crate::ffi::CString::new(name) else { return Err(refused) };
+        match cvt(unsafe { libc::rename(new.as_ptr(), name.as_ptr()) }) {
+            Ok(_) => {
+                set_aside = Some(name);
+                break;
+            }
+            Err(e) if e.raw_os_error() == Some(libc::EEXIST) => continue,
+            Err(e) => return Err(e),
+        }
+    }
+    let Some(set_aside) = set_aside else { return Err(refused) };
+    match cvt(unsafe { libc::rename(old.as_ptr(), new.as_ptr()) }) {
+        Ok(_) => {
+            // The replaced file is gone either way; a failed delete only leaves it beside.
+            unsafe { libc::unlink(set_aside.as_ptr()) };
+            Ok(())
+        }
+        Err(e) => {
+            unsafe { libc::rename(set_aside.as_ptr(), new.as_ptr()) };
+            Err(e)
+        }
+    }
 }
 
 #[cfg(any(target_os = "linux", target_os = "android"))]
@@ -2038,6 +2094,8 @@ pub fn readlink(c_path: &CStr) -> io::Result<PathBuf> {
 
         if buf_read != buf.capacity() {
             buf.shrink_to_fit();
+            #[cfg(target_os = "amigaos")]
+            let buf = crate::sys::helpers::amigaos_path::from_native(&buf).into_owned();
 
             return Ok(PathBuf::from(OsString::from_vec(buf)));
         }
@@ -2127,7 +2185,10 @@ pub fn canonicalize(path: &CStr) -> io::Result<PathBuf> {
         buf
     };
     #[cfg(target_os = "amigaos")]
-    let buf = crate::sys::helpers::amigaos_path::to_amiga_bytes(&buf).into_owned();
+    let buf = {
+        use crate::sys::helpers::amigaos_path::{from_native, to_amiga_bytes};
+        to_amiga_bytes(&from_native(&buf)).into_owned()
+    };
     Ok(PathBuf::from(OsString::from_vec(buf)))
 }
 
@@ -2460,7 +2521,7 @@ pub fn mkfifo(path: &Path, mode: u32) -> io::Result<()> {
 
 pub use remove_dir_impl::remove_dir_all;
 
-// Fallback for REDOX, ESP-ID, Horizon, Vita, Vxworks and Miri
+// Fallback for REDOX, ESP-ID, Horizon, Vita, Vxworks, AmigaOS and Miri
 #[cfg(any(
     target_os = "redox",
     target_os = "espidf",
@@ -2470,6 +2531,8 @@ pub use remove_dir_impl::remove_dir_all;
     target_os = "qnx",
     target_os = "vxworks",
     target_os = "l4re",
+    // clib4 has no working openat()/fdopendir() (ENOSYS): path-based removal.
+    target_os = "amigaos",
     miri
 ))]
 mod remove_dir_impl {
@@ -2486,6 +2549,7 @@ mod remove_dir_impl {
     target_os = "qnx",
     target_os = "vxworks",
     target_os = "l4re",
+    target_os = "amigaos",
     miri
 )))]
 mod remove_dir_impl {

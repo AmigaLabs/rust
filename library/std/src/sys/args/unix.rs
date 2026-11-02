@@ -55,7 +55,13 @@ pub fn args() -> Args {
         // SAFETY: Just checked that the pointer is not NULL, and arguments
         // are otherwise guaranteed to be valid C strings.
         let cstr = unsafe { CStr::from_ptr(ptr) };
+        #[cfg(not(target_os = "amigaos"))]
         vec.push(OsStringExt::from_vec(cstr.to_bytes().to_vec()));
+        // AmigaOS arguments are in the system charset ("año.docx" in ISO-8859-1): as UTF-8.
+        #[cfg(target_os = "amigaos")]
+        vec.push(OsStringExt::from_vec(
+            crate::sys::helpers::amigaos_path::from_native(cstr.to_bytes()).into_owned(),
+        ));
     }
 
     Args::new(vec)

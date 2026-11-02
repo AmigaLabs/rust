@@ -668,7 +668,10 @@ pub fn run_test(
             let supports_threads = !cfg!(target_os = "emscripten")
                 && !cfg!(target_family = "wasm")
                 && !cfg!(target_os = "zkvm")
-                && !cfg!(target_os = "uefi");
+                && !cfg!(target_os = "uefi")
+                // AmigaOS 4: libraries such as mesa.library tie resources to the task that
+                // opened them; run tests on the main task, like a normal program.
+                && !cfg!(target_os = "amigaos");
             if supports_threads {
                 let cfg = thread::Builder::new().name(name.as_slice().to_owned());
                 let mut runtest = Arc::new(Mutex::new(Some(runtest)));
