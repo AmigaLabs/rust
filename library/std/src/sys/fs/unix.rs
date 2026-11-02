@@ -2460,7 +2460,7 @@ pub fn mkfifo(path: &Path, mode: u32) -> io::Result<()> {
 
 pub use remove_dir_impl::remove_dir_all;
 
-// Fallback for REDOX, ESP-ID, Horizon, Vita, Vxworks and Miri
+// Fallback for REDOX, ESP-ID, Horizon, Vita, Vxworks, AmigaOS and Miri
 #[cfg(any(
     target_os = "redox",
     target_os = "espidf",
@@ -2470,6 +2470,8 @@ pub use remove_dir_impl::remove_dir_all;
     target_os = "qnx",
     target_os = "vxworks",
     target_os = "l4re",
+    // clib4 has no working openat()/fdopendir() (ENOSYS): path-based removal.
+    target_os = "amigaos",
     miri
 ))]
 mod remove_dir_impl {
@@ -2486,6 +2488,7 @@ mod remove_dir_impl {
     target_os = "qnx",
     target_os = "vxworks",
     target_os = "l4re",
+    target_os = "amigaos",
     miri
 )))]
 mod remove_dir_impl {
