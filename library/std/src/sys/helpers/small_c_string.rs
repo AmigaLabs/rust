@@ -20,9 +20,9 @@ pub fn run_path_with_cstr<T>(path: &Path, f: &dyn Fn(&CStr) -> io::Result<T>) ->
 
     #[cfg(target_os = "amigaos")]
     {
-        let converted =
-            crate::sys::helpers::amigaos_path::to_amiga_bytes(path.as_os_str().as_encoded_bytes());
-        run_with_cstr(&converted, f)
+        use crate::sys::helpers::amigaos_path::{to_amiga_bytes, to_native};
+        let converted = to_amiga_bytes(path.as_os_str().as_encoded_bytes());
+        run_with_cstr(&to_native(&converted), f)
     }
 }
 

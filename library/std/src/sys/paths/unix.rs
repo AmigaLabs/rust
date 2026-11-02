@@ -20,7 +20,7 @@ pub fn getcwd() -> io::Result<PathBuf> {
 
 #[cfg(target_os = "amigaos")]
 pub fn getcwd() -> io::Result<PathBuf> {
-    let cwd = crate::sys::helpers::amigaos_path::raw_cwd()?;
+    let cwd = crate::sys::helpers::amigaos_path::cwd()?;
     let native = crate::sys::helpers::amigaos_path::to_amiga_bytes(&cwd).into_owned();
     Ok(PathBuf::from(OsString::from_vec(native)))
 }
